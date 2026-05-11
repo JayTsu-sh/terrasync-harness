@@ -1,0 +1,19 @@
+# 强制所有文本文件用 LF，避免 Windows ↔ Linux/WSL 切换时出现纯行尾差异的伪修改。
+# 这只对 harness 自身跟踪的文件生效；5 个子仓库各自是独立 git 仓，
+# 它们的 .gitattributes 归各自 maintainer 管。
+# 对子仓库的兜底见 scripts/bootstrap.*：clone/pull 后会写入 core.autocrlf=false
+# 到该子仓库的本地 .git/config（不影响其跟踪内容）。
+
+* text=auto eol=lf
+
+# 二进制（保险起见显式列出）
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.wasm  binary
+*.exe   binary
+*.dll   binary
+*.so    binary
+*.dylib binary

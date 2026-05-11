@@ -1,0 +1,5 @@
+# Clippy 配置：触发某些 lint 的阈值
+# 注意：开启/关闭具体 lint 在 Cargo.toml 的 [workspace.lints.clippy] 里配
+cognitive-complexity-threshold = 30
+too-many-arguments-threshold = 8
+type-complexity-threshold = 250

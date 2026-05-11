@@ -1,0 +1,6 @@
+# 锁定团队统一的 Rust 工具链。
+# 任何人在 workspace 根目录跑 cargo / rustc 时，rustup 会自动切到这个版本。
+[toolchain]
+channel = "1.95.0"
+components = ["rustfmt", "clippy", "rust-src"]
+profile = "minimal"

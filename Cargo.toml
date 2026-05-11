@@ -1,0 +1,18 @@
+# harness 本身不是真正的 Cargo workspace（详见 README）。
+#
+# 但这里仍保留一个最小的 [workspace] 段，目的是：
+#   显式 exclude 5 个子仓库，防止 Cargo 从 data-mover-rs / nfs-rs / scheduler-rs
+#   这种"没有自己 [workspace]"的子仓库向上回溯时，误把 harness 目录当成包裹它们的 workspace。
+#
+# 不要往 members 里加东西，也不要在 harness 根目录跑 `cargo build`。
+# 跨仓库编译用 `just build`，单仓库就 cd 进去用标准 cargo。
+
+[workspace]
+members = []
+exclude = [
+    "terrasync-rs",
+    "data-mover-rs",
+    "smb-rs",
+    "nfs-rs",
+    "scheduler-rs",
+]
