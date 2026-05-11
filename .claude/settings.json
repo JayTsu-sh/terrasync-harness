@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo --version)",
+      "Bash(cargo -V)",
+      "Bash(cargo locate-project)",
+      "Bash(cargo locate-project *)",
+      "Bash(cargo pkgid)",
+      "Bash(cargo pkgid *)",
+      "Bash(cargo search *)",
+      "Bash(rustc --version)",
+      "Bash(rustc -V)",
+      "Bash(rustc --print *)",
+      "Bash(rustup show)",
+      "Bash(rustup show *)",
+      "Bash(rustup check)",
+      "Bash(rustup toolchain list)",
+      "Bash(rustup component list *)",
+      "Bash(rustup target list *)",
+      "Bash(just --list)",
+      "Bash(just --version)",
+      "Bash(just --evaluate *)",
+      "Bash(just status)",
+      "Bash(cygpath *)",
+      "Bash(winget --version)",
+      "Bash(winget search *)",
+      "Bash(winget list *)",
+      "mcp__plugin_context7_context7__query-docs",
+      "mcp__plugin_context7_context7__resolve-library-id"
+    ]
+  }
+}
