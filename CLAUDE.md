@@ -116,6 +116,111 @@ nfs-rs = { path = "../nfs-rs" }
 
 ---
 
+## gstack
+
+- **所有网页浏览/抓取/QA 走 `/browse` 这个 gstack skill**，不要用 `mcp__claude-in-chrome__*` 那一套工具。
+- 可用 slash skills（installed under `~/.claude/skills/gstack/`）：
+  `/office-hours`, `/plan-ceo-review`, `/plan-eng-review`, `/plan-design-review`,
+  `/design-consultation`, `/design-shotgun`, `/design-html`,
+  `/review`, `/ship`, `/land-and-deploy`, `/canary`, `/benchmark`,
+  `/browse`, `/connect-chrome`,
+  `/qa`, `/qa-only`, `/design-review`,
+  `/setup-browser-cookies`, `/setup-deploy`, `/setup-gbrain`,
+  `/retro`, `/investigate`, `/document-release`,
+  `/codex`, `/cso`, `/autoplan`,
+  `/plan-devex-review`, `/devex-review`,
+  `/careful`, `/freeze`, `/guard`, `/unfreeze`,
+  `/gstack-upgrade`, `/learn`.
+
+---
+
+## Claude 工作流策略（skill 使用约定）
+
+本仓库同时启用 **gstack** 和 **superpowers** 两套全局 skill。它们职能不同也有重叠，
+为避免"自己给自己当 reviewer 演戏"和"小修小补也走重型纪律"的尴尬，按以下约定使用。
+
+> 优先级：本节是 CLAUDE.md 里的 user instruction，**优先级高于 skill 自身默认行为**
+> （详见 `using-superpowers` skill 的 Instruction Priority 段）。skill 自己想 fire
+> 但这里说不要，以这里为准。
+
+### 1. harness 根的工作（默认走 gstack）
+
+在 harness 根目录改 `justfile` / `bootstrap.*` / `.gitattributes` / `CLAUDE.md` /
+`rust-toolchain.toml` / `rustfmt.toml` / `clippy.toml` / `.claude/**` / `scripts/**`
+这类**元工程改动**：
+
+- 直接干，**不要**调用 `superpowers:brainstorming` / `superpowers:test-driven-development` /
+  `superpowers:writing-plans` / `superpowers:executing-plans`——这些 ceremony 在元工程
+  小动作上是表演
+- 需要大局视角时用 gstack：`/autoplan`、`/investigate`、`/review`、`/ship`
+- 一律允许使用 `superpowers:systematic-debugging`（遇 bug 必走）和
+  `superpowers:verification-before-completion`（commit 前自检）——这两个跟任务大小无关
+
+### 2. 子仓库业务开发（**必须**走 superpowers，不管 session 从哪启动）
+
+**触发条件**：要修改子仓库内的业务代码——具体指 `<repo>/src/`、`<repo>/crates/*/src/`、
+新增/修改协议/算法/数据模型/真实 bug 修复/新增功能。
+
+不管 Claude session 是从 harness 根启动的还是从子仓库根启动的，只要任务落到上述位置，
+**强制**按以下顺序走：
+
+1. `superpowers:brainstorming` — 确认意图和需求边界
+2. `superpowers:writing-plans` — 落到分步计划
+3. `superpowers:executing-plans`（或 `subagent-driven-development`） — 实施
+4. `superpowers:test-driven-development` — 写代码阶段必须先 failing test
+5. `superpowers:verification-before-completion` — commit / PR 前最后一道闸
+
+> 从 harness 根启动 session 时，子仓库的 CLAUDE.md 不会被自动重读，Claude 只持有
+> harness 上下文——这就是为什么这条策略必须写在 **harness CLAUDE.md**，否则从根启
+> 动那一类 session 就漏了 superpowers 纪律。
+
+### 3. 不算"业务开发"的子仓库改动（不走 superpowers）
+
+以下改动**不**触发上面那一套，直接干：
+
+- 子仓库 `Cargo.toml` 里仅 bump 依赖版本号、加/去 feature flag、加 `required-features`
+- 整理 examples、删死代码、清 warning（无逻辑改动）
+- 子仓库 README / CLAUDE.md / `.gitignore` 微调
+- 子仓库的 `target/` 清理、本地配置
+
+判断标准：**有没有改业务逻辑？** 没有就走轻量路径。
+
+### 4. 跨仓库的大动作（两段式工作流）
+
+涉及多个子仓库 API 协调的改动（例：nfs-rs 改 trait → terrasync-rs 跟着升级），按这个
+顺序走：
+
+```
+harness 根：gstack /autoplan or /investigate     ← 拿全局视角，定盘子
+   │
+   └─→ cd <被依赖方 subrepo>：superpowers 全套      ← 先改并发 tag
+         │
+         └─→ cd <调用方 subrepo>：superpowers 全套   ← 再升级 git 依赖版本
+               │
+               └─→ harness 根：gstack /review or /ship（如真到那一步）
+```
+
+本地联调期间用 `[patch]`（见架构决策 #2），不要把 path 依赖提到 main。
+
+### 5. 职能重叠时谁优先
+
+| 场景 | 用谁 | 备注 |
+|------|------|------|
+| 规划：外部协作向（要给别人看的） | gstack `/autoplan` | 跨仓动作的入口 |
+| 规划：内部实施向（自己执行的） | `superpowers:writing-plans` | 在子仓库内 |
+| 评审：协作 / 发布门控 | gstack `/review` `/ship` | |
+| 评审：代码纪律 / 自我审查 | `superpowers:requesting-code-review` | 子仓库 PR 前 |
+| 调研：跨仓 / 架构层 | gstack `/investigate` | harness 根 |
+| 调研：单仓 bug 定位 | `superpowers:systematic-debugging` | 任何地方都可 |
+| 浏览器 / 网页抓取 / QA | gstack `/browse` `/qa` | 不要用 `mcp__claude-in-chrome__*` |
+
+### 6. 例外条款
+
+- 如果用户在对话里**显式**说"走 TDD" 或 "跳过 brainstorm 直接干"，按用户当下指令为准（用户指令 > 本策略 > skill 默认）
+- 如果是紧急 hotfix（user 明确标注 urgent），允许跳过 brainstorming → writing-plans 两步，但 TDD 和 verification 不跳
+
+---
+
 ## 各子仓库的 harness 视角注意点
 
 | 子仓库 | 注意 |
