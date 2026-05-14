@@ -176,3 +176,8 @@ ephemeral 路径不仅修了 N=256 的失败，**N=512 在 TW 重污染状态下
 | 极限 | `?noresvport=true` | 512 | 512/0 | 0 | 2034 / 4057 |
 
 **结论**：`?noresvport=true` 路径下 N=256 与 N=512 均 0 失败、0 端口耗尽 warn，根因修复闭环验证通过。`Phase 3` 中 N=256 失败 1 个 + N=128 隐式 4346 个 AddrInUse retry 的现象在 noresvport 路径上完全消失。
+
+### Phase 6 — e2e 验证
+
+- baseline (`e2e-test-nfs-v3-full-sync` 默认 URL): PASS, 527 entries 一致
+- `?noresvport=true`: PASS, 527 entries 一致；`target/debug/logs/*/app.log` 中**未出现** `exhausted all connect attempts` 或 `error obtaining ports from portmapper`
